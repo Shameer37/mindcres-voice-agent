@@ -1,0 +1,54 @@
+# Local configuration and secrets. Keep the safe template tracked.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python virtual environments and generated caches.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Test and coverage output.
+.coverage
+.coverage.*
+htmlcov/
+
+# Local databases and SQLite sidecar files.
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Local call recordings and generated logs.
+recordings/*
+!recordings/.gitkeep
+logs/
+*.log
+
+# Temporary and generated build/output directories.
+tmp/
+build/
+dist/
+output/
+node_modules/
+
+# IDE and operating-system files.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp

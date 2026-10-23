@@ -1,0 +1,73 @@
+experiment,model,sample_id,reference,transcript,wer,exact_match,meaning_preserved,stt_ms,cpu_ms,audio_seconds,language_probability,working_set_mb
+baseline,tiny,1,Yeah.,Yeah.,0.0,true,true,1193.8,3640.6,1.87,1,237.7
+baseline,tiny,2,No.,No.,0.0,true,true,464.1,1937.5,1.87,1,238.7
+baseline,tiny,3,Fully resolved.,Foley Result,1.0,false,false,525.6,2156.2,2.06,1,238.7
+baseline,tiny,4,Not resolved.,Not resolved.,0.0,true,true,499.2,2046.9,1.99,1,238.7
+baseline,tiny,5,Low internet.,Low Internet.,0.0,true,true,575.0,2140.6,1.99,1,238.7
+baseline,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,504.7,2265.6,2.3,1,238.7
+baseline,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,522.6,2187.5,2.57,1,238.8
+baseline,tiny,8,The technician arrived late.,The technician arrived late.,0.0,true,true,509.2,2031.2,2.54,1,238.8
+baseline,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,509.8,2171.9,2.62,1,238.8
+baseline,tiny,10,Eight.,8.,0.0,true,true,498.7,2000.0,1.87,1,238.8
+baseline,tiny,11,Nine.,9,0.0,true,true,502.5,2062.5,1.87,1,238.8
+baseline,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,517.1,2156.2,2.18,1,238.8
+beam3,tiny,1,Yeah.,Yeah.,0.0,true,true,889.5,3718.8,1.87,1,251.5
+beam3,tiny,2,No.,No.,0.0,true,true,642.8,2296.9,1.87,1,252.1
+beam3,tiny,3,Fully resolved.,Fully Resolved,0.0,true,true,658.5,2703.1,2.06,1,250.7
+beam3,tiny,4,Not resolved.,Not resolved.,0.0,true,true,598.1,2468.8,1.99,1,250.7
+beam3,tiny,5,Low internet.,Low Internet.,0.0,true,true,559.7,2390.6,1.99,1,250.7
+beam3,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,546.0,2156.2,2.3,1,250.8
+beam3,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,553.9,2281.2,2.57,1,250.9
+beam3,tiny,8,The technician arrived late.,The Technician arrives late.,0.25,false,true,576.6,2359.4,2.54,1,250.9
+beam3,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,556.2,2218.8,2.62,1,250.9
+beam3,tiny,10,Eight.,8.,0.0,true,true,550.4,2234.4,1.87,1,251.8
+beam3,tiny,11,Nine.,9,0.0,true,true,623.3,2421.9,1.87,1,252.4
+beam3,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,608.5,2578.1,2.18,1,250.9
+auto_language,tiny,1,Yeah.,Yeah.,0.0,true,true,1464.9,5812.5,1.87,0.2577,263.1
+auto_language,tiny,2,No.,No.,0.0,true,true,1138.2,4671.9,1.87,0.8147,263.2
+auto_language,tiny,3,Fully resolved.,Foley Result,1.0,false,false,1025.1,4031.2,2.06,0.9458,263.4
+auto_language,tiny,4,Not resolved.,Not resolved.,0.0,true,true,1291.9,4921.9,1.99,0.9398,263.4
+auto_language,tiny,5,Low internet.,Low Internet.,0.0,true,true,1175.9,4500.0,1.99,0.9129,263.5
+auto_language,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,1179.5,4953.1,2.3,0.9723,263.9
+auto_language,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,1093.9,4562.5,2.57,0.9854,264.0
+auto_language,tiny,8,The technician arrived late.,The technician arrived late.,0.0,true,true,1058.9,4359.4,2.54,0.9381,264.0
+auto_language,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,1258.1,4812.5,2.62,0.9607,264.1
+auto_language,tiny,10,Eight.,8.,0.0,true,true,1080.1,4531.2,1.87,0.7432,264.1
+auto_language,tiny,11,Nine.,9,0.0,true,true,1030.5,4031.2,1.87,0.735,264.1
+auto_language,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,1051.6,4218.8,2.18,0.9653,264.2
+condition_context,tiny,1,Yeah.,Yeah.,0.0,true,true,903.3,3796.9,1.87,1,277.8
+condition_context,tiny,2,No.,No.,0.0,true,true,651.2,2687.5,1.87,1,277.8
+condition_context,tiny,3,Fully resolved.,Foley Result,1.0,false,false,595.6,2328.1,2.06,1,278.0
+condition_context,tiny,4,Not resolved.,Not resolved.,0.0,true,true,617.5,2640.6,1.99,1,278.0
+condition_context,tiny,5,Low internet.,Low Internet.,0.0,true,true,619.7,2593.8,1.99,1,278.0
+condition_context,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,636.9,2609.4,2.3,1,278.4
+condition_context,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,565.5,2250.0,2.57,1,278.8
+condition_context,tiny,8,The technician arrived late.,The technician arrived late.,0.0,true,true,491.1,2078.1,2.54,1,278.9
+condition_context,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,518.8,2234.4,2.62,1,279.2
+condition_context,tiny,10,Eight.,8.,0.0,true,true,472.7,1890.6,1.87,1,279.2
+condition_context,tiny,11,Nine.,9,0.0,true,true,568.0,2203.1,1.87,1,279.2
+condition_context,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,571.4,2296.9,2.18,1,279.2
+vad_filter,tiny,1,Yeah.,Yeah.,0.0,true,true,1007.0,3750.0,1.87,1,310.5
+vad_filter,tiny,2,No.,No.,0.0,true,true,505.1,2062.5,1.87,1,310.6
+vad_filter,tiny,3,Fully resolved.,Foley resolved.,0.5,false,true,523.6,2093.8,2.06,1,310.7
+vad_filter,tiny,4,Not resolved.,Not resolved.,0.0,true,true,507.8,1984.4,1.99,1,310.7
+vad_filter,tiny,5,Low internet.,Low Internet.,0.0,true,true,523.9,2109.4,1.99,1,310.7
+vad_filter,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,546.9,2218.8,2.3,1,310.8
+vad_filter,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,626.1,2390.6,2.57,1,310.8
+vad_filter,tiny,8,The technician arrived late.,The Technician arrived late.,0.0,true,true,590.9,2328.1,2.54,1,310.9
+vad_filter,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,549.9,2250.0,2.62,1,310.9
+vad_filter,tiny,10,Eight.,8,0.0,true,true,586.4,2375.0,1.87,1,310.9
+vad_filter,tiny,11,Nine.,9,0.0,true,true,521.0,2093.8,1.87,1,310.9
+vad_filter,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,524.5,2125.0,2.18,1,310.9
+base_model,base,1,Yeah.,Yeah,0.0,true,true,1723.1,6468.8,1.87,1,373.3
+base_model,base,2,No.,No.,0.0,true,true,1071.0,4375.0,1.87,1,374.0
+base_model,base,3,Fully resolved.,Fully resolved.,0.0,true,true,1026.3,4078.1,2.06,1,374.2
+base_model,base,4,Not resolved.,Not resolved.,0.0,true,true,1125.1,4593.8,1.99,1,374.2
+base_model,base,5,Low internet.,Low internet.,0.0,true,true,992.9,4218.8,1.99,1,373.6
+base_model,base,6,My internet is slow.,My internet is slow.,0.0,true,true,958.3,3828.1,2.3,1,374.1
+base_model,base,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,1116.2,4296.9,2.57,1,375.2
+base_model,base,8,The technician arrived late.,The technician arrived late.,0.0,true,true,1033.8,4125.0,2.54,1,375.2
+base_model,base,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,992.8,3984.4,2.62,1,375.1
+base_model,base,10,Eight.,8,0.0,true,true,1005.1,4156.2,1.87,1,376.0
+base_model,base,11,Nine.,9,0.0,true,true,988.8,4046.9,1.87,1,376.0
+base_model,base,12,Nothing else to add.,Nothing else to add.,0.0,true,true,1106.4,4406.2,2.18,1,375.0

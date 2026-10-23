@@ -1,0 +1,11 @@
+customer_id,name,mobile,preferred_language,ticket_id,issue_type,technician_name,visit_date,promised_slot
+CUST001,Aarav Sharma,9000014826,en,TKT1001,Internet outage,Rahul Verma,2026-10-15,09:00-11:00
+CUST002,Diya Patel,9000027351,hi,TKT1002,Slow internet,Anil Kumar,2026-10-15,11:00-13:00
+CUST003,Arjun Rao,9000036194,te,TKT1003,Router replacement,Suresh Reddy,2026-10-16,09:00-11:00
+CUST004,Meera Nair,9000048267,en,TKT1004,Frequent disconnections,Vikram Singh,2026-10-16,14:00-16:00
+CUST005,Kabir Reddy,9000053918,te,TKT1005,Wi-Fi coverage issue,Ramesh Naidu,2026-10-17,10:00-12:00
+CUST006,Ananya Gupta,9000065742,hi,TKT1006,Modem configuration,Deepak Sharma,2026-10-17,13:00-15:00
+CUST007,Vikram Joshi,9000072639,en,TKT1007,No internet connection,Mohan Das,2026-10-18,09:00-11:00
+CUST008,Sai Lakshmi,9000089415,te,TKT1008,Slow internet,Prasad Rao,2026-10-18,15:00-17:00
+CUST009,Riya Kapoor,9000091573,hi,TKT1009,Router reboot issue,Amit Yadav,2026-10-19,10:00-12:00
+CUST010,Aditya Menon,9000106842,en,TKT1010,Frequent disconnections,Kiran Kumar,2026-10-19,12:00-14:00

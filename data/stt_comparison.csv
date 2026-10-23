@@ -1,0 +1,11 @@
+utterance,reference,transcript_8khz_ulaw,wer_8khz,transcript_16khz_pcm,wer_16khz
+1,"Yes, I am the account holder.","Yes, I am the Account holder.",0.0,"Yes, I am the Account holder.",0.0
+2,"No, the internet issue is not resolved.","No, the Internet issue is not resolved.",0.0,"No, the internet issue is not resolved.",0.0
+3,My internet keeps dropping.,My internet keeps dropping.,0.0,My internet keeps dropping.,0.0
+4,The technician arrived on time.,The technician arrived on time.,0.0,The technician arrived on time.,0.0
+5,The technician did not arrive on time.,The technician did not arrive on time.,0.0,The technician did not arrive on time.,0.0
+6,I would rate the technician five out of five.,I would rate the technician 5 out of 5.,0.0,I would rate the technician 5 out of 5.,0.0
+7,I would recommend SkyFiber nine out of ten.,I would recommend SkyFiber 9 out of 10.,0.0,I would recommend SkyFiber 9 out of 10.,0.0
+8,There are no problems now.,There are no problems now.,0.0,There are no problems now.,0.0
+9,Please call me tomorrow morning.,Please call me tomorrow morning.,0.0,Please call me tomorrow morning.,0.0
+10,"No other feedback, thank you.",No other feedback. Thank you.,0.0,No other feedback. Thank you.,0.0

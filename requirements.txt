@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+sqlalchemy
+pydantic_settings
+pytest
+httpx
+websockets
+pytest-asyncio
+tzdata
+scipy
+numpy
+faster-whisper
+soundfile
+edge-tts
+imageio-ffmpeg

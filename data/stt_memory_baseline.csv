@@ -1,0 +1,13 @@
+experiment,model,sample_id,reference,transcript,wer,exact_match,meaning_preserved,stt_ms,cpu_ms,audio_seconds,language_probability,working_set_mb
+baseline,tiny,1,Yeah.,Yeah.,0.0,true,true,1140.3,3218.8,1.87,1,237.9
+baseline,tiny,2,No.,No.,0.0,true,true,486.0,1921.9,1.87,1,238.6
+baseline,tiny,3,Fully resolved.,Fully resolved.,0.0,true,true,479.5,2156.2,2.06,1,239.0
+baseline,tiny,4,Not resolved.,Not resolved.,0.0,true,true,452.8,1796.9,1.99,1,238.1
+baseline,tiny,5,Low internet.,Low Internet.,0.0,true,true,455.9,1843.8,1.99,1,238.0
+baseline,tiny,6,My internet is slow.,My internet is slow.,0.0,true,true,445.0,1796.9,2.3,1,238.8
+baseline,tiny,7,The internet keeps dropping.,The internet keeps dropping.,0.0,true,true,455.4,1796.9,2.57,1,238.8
+baseline,tiny,8,The technician arrived late.,The technician arrived late.,0.0,true,true,436.0,1812.5,2.54,1,238.8
+baseline,tiny,9,I would rate the technician four.,I would rate the technician for.,0.1667,false,false,468.3,1906.2,2.62,1,238.8
+baseline,tiny,10,Eight.,8,0.0,true,true,477.5,2031.2,1.87,1,238.8
+baseline,tiny,11,Nine.,9,0.0,true,true,469.3,1906.2,1.87,1,239.2
+baseline,tiny,12,Nothing else to add.,Nothing else to add.,0.0,true,true,480.9,2031.2,2.18,1,238.1
