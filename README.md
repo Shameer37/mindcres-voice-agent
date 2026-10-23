@@ -56,25 +56,21 @@ Browser Phone Simulator (web/index.html)
 │                            │ caller_text                  │
 │              ┌─────────────┼──────────────┐              │
 │              ▼             ▼              ▼              │
-│   ┌──────────────┐ ┌──────────────┐  ┌──────────────┐  │
-│   │ Fast Regex   │ │LLM Extraction│  │ConvService   │  │
-│   │ Extractor    │ │ qwen2.5:3b   │  │(guardrails)  │  │
-│   │(identity,    │ │(complex NL   │  │· identity-   │  │
-│   │ numbers,     │ │ utterances)  │  │  first lock  │  │
-│   │ yes/no)      │ └──────────────┘  │· validation  │  │
-│   └──────────────┘         │         │· retries     │  │
-│           merge_extractions()         │· end-of-call │  │
-│                    │                  └──────┬───────┘  │
-│                    │ extracted + validated   │           │
-│                    └──────────────────────▶ │           │
-│                                     reply.action        │
-│                                             │           │
-│   ┌─────────────────────────────────────────▼─────────┐ │
-│   │  LLM Reply Generator (llm_reply_service.py)        │ │
-│   │  · qwen2.5:3b generates natural spoken text        │ │
-│   │  · Code controls action/flow; LLM only does words  │ │
-│   │  · Falls back to deterministic question on error   │ │
-│   └───────────────────────┬────────────────────────────┘ │
+│   ┌──────────────────────────┐                            │
+│   │ Deterministic extraction │──── ambiguous only ─────┐ │
+│   │ (question-aware parser)  │                         ▼ │
+│   └─────────────┬────────────┘              ┌─────────────┐
+│                 │                           │ Optional    │
+│                 │                           │ Ollama LLM  │
+│                 └────────────┬──────────────┴─────────────┘
+│                              ▼                            │
+│                 ┌────────────────────────┐               │
+│                 │ Conversation code owns │               │
+│                 │ identity/validation/    │               │
+│                 │ retries/flow/finalize  │               │
+│                 └────────────┬───────────┘               │
+│                              ▼                            │
+│        Deterministic wording by default; optional LLM     │
 │                            │ spoken text                  │
 │   ┌────────────────────────▼────────────────────────────┐│
 │   │  TTS: edge-tts → FFmpeg → 8kHz μ-law → 20ms frames  ││
@@ -97,9 +93,13 @@ flowchart LR
     WS --> Decode[Base64 decode and μ-law to PCM16]
     Decode --> VAD[VAD and end-of-turn detector]
     VAD --> STT[Local faster-whisper STT]
-    STT --> Extract[Deterministic extraction plus Ollama for complex language]
+    STT --> Extract[Question-aware code extraction first]
+    Extract -->|ambiguous text only| Ollama[Optional Ollama extraction fallback]
+    Ollama --> Guard
     Extract --> Guard[Code validation, retries, identity, opt-out, callback, state]
-    Guard --> Reply[Ollama spoken wording with code fallback]
+    Guard -->|default| Reply[Deterministic spoken prompt]
+    Guard -. optional flag .-> ReplyLLM[Ollama spoken wording]
+    ReplyLLM --> TTS
     Reply --> TTS[Edge TTS and FFmpeg conversion]
     TTS -->|Paced 160-byte μ-law frames and marks| Browser
     WS --> DB[(SQLite calls, results, transcript, metrics)]
@@ -113,9 +113,9 @@ flowchart LR
 
 | Component | Model / Tool | Reason |
 |---|---|---|
-| **STT** | `faster-whisper tiny` (local) | Runs on CPU and handles 8 kHz μ-law after resampling to 16 kHz. The model is loaded from the local cache only; fetch it explicitly with `python scripts/download_stt_model.py --model tiny`. Latency and accuracy have not been benchmarked in this workspace. |
+| **STT** | `faster-whisper tiny` (local) | CPU/int8 baseline handles 8 kHz μ-law after resampling to 16 kHz. It loads from local cache; fetch it explicitly with `python scripts/download_stt_model.py --model tiny`. The checked-in 8/16 kHz benchmark uses synthetic Edge TTS speech, not real-caller accuracy evidence. |
 | **LLM (extraction)** | `qwen2.5:3b` via Ollama (local) | Free, runs on CPU/GPU, strong instruction-following on short structured extraction tasks, JSON output mode reliable. 3B params fast enough on CPU. |
-| **LLM (reply)** | Same `qwen2.5:3b` | Consistent voice; the extraction and reply contexts share the same model loaded in Ollama so no dual-model overhead. |
+| **LLM (reply)** | Same `qwen2.5:3b`, optional | `ENABLE_LLM_REPLY_GENERATION=false` by default. Code-generated spoken prompts are used unless explicitly enabled. |
 | **TTS** | `edge-tts` (external service) | No API key is configured; generates an MP3 that FFmpeg converts. It requires network access and has no bundled offline fallback. |
 | **Audio codec** | Custom numpy G.711 μ-law | Python 3.13 deprecated `audioop`; numpy vectorised encode/decode is fast and dependency-free. |
 
@@ -129,11 +129,12 @@ flowchart LR
 | Is this the right person? | **Code** (regex) | Simple yes/no pattern, no LLM latency |
 | Extract technician rating (1–5) | **Code** (regex fast path) | Number from short utterance; regex is faster and more reliable |
 | Extract NPS (0–10) | **Code** (regex fast path) | Same reason |
-| Extract complex free-text feedback | **LLM** (qwen2.5:3b) | Natural language disambiguation needed |
+| Extract clear answers | **Code first** | Question-aware deterministic extraction handles identity, yes/no, numeric values, and clear feedback. |
+| Extract genuinely ambiguous free text | **Optional LLM fallback** (qwen2.5:3b via Ollama) | Used only for ambiguity; missing or unclear transcripts are not invented. |
 | Validate extracted values (ranges, types) | **Code** | Must not trust LLM; code enforces bounds |
 | Re-ask after 2 failed attempts | **Code** | Business rule |
 | End the call | **Code** (LLM may propose via signal) | Critical; code must not allow LLM to end early |
-| Generate spoken reply wording | **LLM** (with fallback) | Natural, empathetic, varied phrasing |
+| Generate spoken reply wording | **Code by default; optional LLM** | `.env.example` disables LLM reply generation; code owns the action and default wording. |
 | Generate spoken reply for terminal turns | **Code** (hardcoded) | Must include required info (callback number, 24h promise) |
 
 ---
@@ -159,11 +160,11 @@ Prompts live in `prompts/feedback_extraction.txt` (extraction) and inline in `ap
 
 ## Connecting to Exotel / Twilio (Real Telephony)
 
-The WebSocket protocol is intentionally identical to Twilio Media Streams and Exotel's voice streaming.
+The browser simulator's WebSocket protocol is application-specific. Twilio/Exotel integration does not exist yet; a provider adapter, webhook, authentication/signature checks, handshake normalization, lifecycle handling, and provider-specific audio/event mapping are required.
 
 **To switch to Twilio:**
 1. Add a `POST /twilio/voice` webhook that returns TwiML `<Stream>` pointing to a telephony adapter.
-2. Normalize Twilio's `event` / nested `media.payload` messages into this application's `event` protocol; the server also accepts the legacy `type` field.
+2. Normalize Twilio's `event` / nested `media.payload` messages into this application's `event` protocol; the server also accepts the legacy `type` field for its own clients.
 3. Twilio sends `{"event":"start","streamSid":"...","customParameters":{...}}` — map `customParameters.customer_id` to create the call.
 4. Keep the browser protocol adapter and telephony state separate; authentication, signatures, stream lifecycle, and provider-specific marks still need implementation.
 5. The browser simulator remains available for local development.
@@ -207,7 +208,8 @@ Codex (OpenAI) assisted with this repository audit, implementation changes, test
 
 - `python scripts/diagnose_providers.py` checks the cached STT model, Ollama model, and live Edge TTS conversion. TTS diagnostics make an outbound request.
 - `python scripts/diagnose_providers.py --stt-only` checks only the cached local Whisper model.
-- `python scripts/evaluate_audio_measurements.py --output data/stt_comparison.csv` generates ten Edge TTS references, compares the 8 kHz μ-law and direct 16 kHz Whisper paths, and replays both silence thresholds through the turn detector. It requires Edge TTS network access and cached Whisper weights.
+- `python scripts/evaluate_audio_measurements.py --output data/stt_comparison.csv` generates ten Edge TTS references, compares the 8 kHz μ-law and direct 16 kHz Whisper paths, and replays both silence thresholds through the turn detector. It requires Edge TTS network access and cached Whisper weights. This synthetic replay does not measure caller cutoffs or response latency.
+- `python scripts/evaluate_stt_answer_impact.py` applies the current deterministic parser to the saved paired transcripts; it does not recreate or retranscribe the missing source audio.
 - `python scripts/evaluate_vad_assets.py` replays checked-in WAVs through the current μ-law speech gate and reports turn counts at 500/800/1000 ms silence thresholds; it does not measure STT accuracy.
 - `python -m pytest -q` runs unit and API tests. See [EVAL.md](EVAL.md) for the checks actually completed and current blockers.
 - `python scripts/simulated_caller.py --scenario happy` is a real integration test; `unresolved`, `barge-in`, and `wrong-person` are available too. It needs the running API, a cached Whisper model, Ollama, and Edge TTS.

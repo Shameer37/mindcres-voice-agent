@@ -111,3 +111,16 @@ Source of truth: `C:\Users\shame\Desktop\task.pdf` (SkyFiber Take-Home Task, six
 - [x] Focused test set: **100 passed**. Full suite: `.venv\Scripts\python.exe -m pytest -q` — **211 passed in 2.34 s**. Compile: `.venv\Scripts\python.exe -m compileall -q app scripts tests websocket_client.py websocket_audio_test.py` — passed.
 - [ ] No new browser test was run. Live microphone accuracy, audible TTS, and whether the historical call's STT experimental variant was active remain unverified. See detailed caveats and metrics in `EVAL.md`.
 
+## Submission evidence completion pass — 2026-10-23
+
+- [x] Latency cohort reselected from three complete simulated WebSocket calls (happy, unresolved, barge-in), 17 caller turns, with all four metrics present. Exported per-turn rows to `data/caller_turn_latency_17.csv`. Median/p90 and per-field missing counts are reported in `EVAL.md`; nearest-rank p90 is used.
+- [x] Existing ten paired synthetic STT transcripts passed through the current question-aware parser using `scripts/evaluate_stt_answer_impact.py`; output saved to `data/stt_comparison_answer_impact.csv`. 0/10 paired answer disagreements. Original generated source WAVs were not retained, and this does not measure real callers.
+- [x] EVAL documents the exact eight required scenario statuses. Manual browser calls `6885db9d-219d-4fa8-8b7d-ffc287233301` (unclear rating then valid score) and `d8a93d14-4f7e-43f4-9e57-93f953e31138` (off-topic question) now provide evidence; the off-topic interaction is a partial pass because no explicit redirect was given.
+- [x] EVAL now explains threshold replay limits: 10/10 turns at both settings, but cutoff ground truth and response latency were not retained/measured; production remains 800 ms.
+- [x] Added official-price hypothetical cost bands and formulas with exclusions and TTS-1 deprecation note. No paid service added to the implementation.
+- [x] Formal failure section now includes the confirmed μ-law silence-byte defect alongside terminal delivery and dropped inter-word issue speech.
+- [x] README architecture now reflects code-first parsing and deterministic replies by default; LLM reply generation is explicitly optional (`ENABLE_LLM_REPLY_GENERATION=false`), benchmark is identified as synthetic, and Twilio/Exotel integration is described as future adapter work.
+- [x] Final verification: `.venv\Scripts\python.exe -m pytest -q` — **211 passed in 3.17 s** with local loopback permission; `.venv\Scripts\python.exe -m compileall -q app scripts tests websocket_client.py websocket_audio_test.py` — passed. `git diff --check` reported no whitespace errors (only Git's LF→CRLF notices).
+- [ ] Browser microphone, audible browser playback, and demo recording remain unverified; see manual procedure in README.
+- [ ] Callback, rating re-ask, and off-topic scenarios have manual browser evidence. Add a deterministic off-topic redirect and regression coverage if this behavior is required; the current observed flow resumes but does not acknowledge the unrelated question. No final submission readiness claim until that criterion, browser-audio checks, and ground-truth threshold measurements are complete.
+

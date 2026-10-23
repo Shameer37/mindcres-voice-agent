@@ -2,11 +2,11 @@
 
 ## Evidence policy
 
-The previous version of this report contained latency values, accuracy claims, and scenario passes without reproducible logs or scripts. Those claims were removed. This report records only checks run in this workspace; it does not infer end-to-end success from mocks or source review.
+The previous version of this report contained latency values, accuracy claims, and scenario passes without reproducible logs or scripts. Those claims were removed. This report records only checks run in this workspace; it does not infer end-to-end success from mocks or source review. The requirement-focused sections for latency, scenarios, threshold tuning, paired STT and costs below supersede older historical snapshots later in this file. Historical addenda remain for traceability, not as current status.
 
 ## Environment and checks
 
-- Date: 2026-10-22 (Asia/Calcutta)
+- Date: 2026-10-23 (Asia/Calcutta)
 - OS/runtime: Windows; project virtual environment reports Python 3.12.10 and pytest 9.1.1.
 - Project models configured in code: faster-whisper `tiny` on CPU/int8, Ollama `qwen2.5:3b`, Edge TTS `en-US-AriaNeural`.
 - CPU/GPU/RAM: NOT MEASURED. Ollama `qwen2.5:3b` and Edge TTS were reachable during diagnostics; faster-whisper tiny cache was present and live inference succeeded in simulated calls.
@@ -14,29 +14,20 @@ The previous version of this report contained latency values, accuracy claims, a
 - Provider diagnostic: Ollama READY; Edge TTS READY (153 160-byte frames); STT cache file found. Diagnostic did not load STT, but live calls did.
 - No real microphone/browser call or screen recording was completed. The desktop automation helper failed initialization twice with `failed to write kernel assets: The system cannot find the path specified`, so browser capture was unavailable in this session.
 
+**Submission evidence pass (2026-10-23):** `.venv\Scripts\python.exe -m compileall -q app scripts tests websocket_client.py websocket_audio_test.py` passed. A sandboxed `.venv\Scripts\python.exe -m pytest -q` stalled after 21 tests in Windows asyncio socket setup and was interrupted; rerunning with local loopback permission completed **211 passed in 3.17 s**. The exact reproducible transcript-to-answer comparison command `.venv\Scripts\python.exe scripts/evaluate_stt_answer_impact.py` completed 10 paired rows, 0 answer disagreements, 2 unresolved parser values (the callback phrase correctly did not become feedback). No live browser call or demo recording was performed in this pass.
+
 ## Caller-turn latency
 
-**Live simulated-call sample — 15 caller turns** from one happy call, one unresolved attempt that failed to save its ongoing-problem description, and one pre-optimization barge-in call. Values are server-side `turn_metrics`; p90 is nearest-rank. This sample includes an incomplete scenario and pre-optimization runs.
+**Recomputed, consistent sample: 17 caller turns** from the three complete simulated WebSocket calls documented below: happy `716fed3a-bd34-409f-a767-b165ca6f3835` (5 turns), unresolved/follow-up `337f8c5c-9a5a-4442-a8de-6faa5b978242` (7), and barge-in `8edab79e-1bf9-4c5a-a3fb-3c3dec50853a` (5). All were synthesized Edge TTS caller speech, same application version/configuration and server metric fields; no browser mic. The per-turn evidence is [data/caller_turn_latency_17.csv](data/caller_turn_latency_17.csv). Statistics use non-null values only, median is the usual midpoint median, p90 is nearest-rank `ceil(0.9*n)`, and each metric reports its own valid n and missing count. No rows were imputed.
 
-| Call | Turn | STT ms | TTS first ms | Response ms |
+| Metric | n / missing | Median ms | p90 ms | Range ms |
 |---|---:|---:|---:|---:|
-| happy f36ff9c4 | 3 | 802.6 | 1914.0 | 18629.0 |
-| happy f36ff9c4 | 5 | 767.7 | 2040.9 | 8959.0 |
-| happy f36ff9c4 | 8 | 689.6 | 1361.1 | 7477.1 |
-| happy f36ff9c4 | 10 | 713.6 | 1655.0 | 6893.8 |
-| happy f36ff9c4 | 13 | 653.4 | 1818.1 | 2507.1 |
-| unresolved bf1316b4 | 3 | 621.1 | 1741.3 | 7742.2 |
-| unresolved bf1316b4 | 6 | 715.0 | 1884.3 | 8442.3 |
-| unresolved bf1316b4 | 9 | 795.4 | 1773.9 | 22964.2 |
-| unresolved bf1316b4 | 12 | 721.1 | 2056.3 | 23359.8 |
-| unresolved bf1316b4 | 15 | 878.7 | 2133.2 | 8774.0 |
-| unresolved bf1316b4 | 18 | 753.3 | 1255.9 | 2044.8 |
-| barge-in 82515e8a | 5 | 650.2 | 1140.8 | 8775.5 |
-| barge-in 82515e8a | 7 | 498.8 | 1167.1 | 7880.0 |
-| barge-in 82515e8a | 9 | 473.6 | 1418.2 | 8388.0 |
-| barge-in 82515e8a | 11 | 457.4 | 1352.5 | 1847.8 |
+| `stt_ms` | 17 / 0 | 455.96 | 515.18 | 443.19–1034.06 |
+| `llm_ms` | 17 / 0 | 0.17 | 0.66 | 0.11–3.24 |
+| `tts_first_audio_ms` | 17 / 0 | 1407.06 | 2615.05 | 1062.14–3355.51 |
+| `response_latency_ms` | 17 / 0 | 1899.80 | 3125.90 | 1551.31–3848.25 |
 
-For these 15 turns, response median was **8388.0 ms** and nearest-rank p90 **22964.2 ms**. STT was mostly under 0.9 s; two unresolved turns used about 10.8 s in extraction. Local LLM reply timeouts added up to 15 s. TTS first audio was generally 1.3–2.1 s.
+The LLM field is near zero here because routine clear answers used deterministic extraction/state logic; this is not a measurement of genuinely ambiguous LLM fallback turns. TTS first audio is the largest stage median in this sample; it does not include or prove browser audible playback. The response metric is end-to-end and includes preceding work. Three measured optimization priorities: (1) investigate TTS synthesis/conversion and frame-start timing because the TTS median is 1.41 s and p90 2.62 s; (2) reduce or stream TTS generation/conversion before the first frame, then measure stage timings; (3) shorten caller-to-turn completion through a ground-truth silence study, but this is a hypothesis until cutoffs and the added threshold delay are measured. Do not interpret these as causal improvements without paired runs.
 
 ## Latest browser-call investigation — 2026-10-23
 
@@ -54,44 +45,60 @@ After the deterministic fast path and six-second local reply timeout, verified c
 
 ## Scenario results
 
-**Live scenario evidence** below comes from real Edge TTS caller audio, WebSocket media, SQLite/API results, and server terminal events.
+Status below means the specified interaction actually ran. Five scenarios have full-call evidence: four real synthesized-caller WebSocket integration runs with persisted database/API result and terminal event, plus a separate live WebSocket silence check. These are not browser mic calls. `scripts/simulated_caller.py` currently automates happy, unresolved, barge-in, and wrong-person.
 
-| Scenario | Expected result | Observed result / evidence | Status |
-|---|---|---|---|
-| Happy path | Completed with validated feedback | Current-code synthesized-caller call `16051bd3-83d1-4d81-886d-aa8bcc7c484c`: all expected answers saved; `completed`; terminal event received. Several turns also received one silence reminder while the scripted answer was pending. | PASS (simulated caller; browser mic NOT RUN) |
-| Unresolved issue | Follow-up required and problem description saved | Current-code call `742e00ad-889f-4b59-9455-693b658c5fa2` transcribed “My internet keeps dropping.” and persisted exact `still_facing`, no unclear fields, `needs_followup=true`; terminal hangup received. | PASS (simulated caller; browser mic NOT RUN) |
-| Barge-in | Interrupt agent audio; clear; process caller response | Current-code call `2b34e4f1-90a3-49b1-9a7a-5dccae097410`: `clear` observed, interruption at 2344.6 ms after playback began and after first audio at 1249.0 ms; expected answers persisted and terminal event received. An earlier attempt hit a 12 s Edge TTS timeout, and its immediate retry failed Edge TTS DNS before connecting; the later full run passed. | PASS (simulated caller; browser mic NOT RUN) |
-| Silence | One reminder, then no-response closure | Current-code WebSocket call `d4434f2a-3503-4d37-a159-2d762d5e8105`: one reminder at 20.1 s from start (after greeting playback plus configured 9 s), final goodbye at 44.2 s, terminal `no_input` at 51.2 s; persisted `outcome=no_response` and null answers. | PASS (live WebSocket; no caller audio) |
-| Wrong person | Close before collecting feedback | `2022e0cd`: `wrong_person`, identity false, no feedback, terminal event received. | PASS |
-| Invalid rating/NPS | Retry twice, then null plus `unclear_fields` | Not run | NOT RUN |
-| Answer correction | Later valid answer replaces earlier answer | Unit test covers the state service only; no live call | PARTIAL |
-| Callback | Callback request/time persisted and call ended | State-service unit test exists; no live call | PARTIAL |
-| Stop calling | Opt-out persisted | State-service unit test exists; no API persistence run | PARTIAL |
-| Disconnect/hangup | Partial result and transcript persisted | Not run against a live WebSocket | NOT RUN |
+| ID / scenario | Method and scripted input | Expected | Actual and evidence | Status |
+|---|---|---|---|---|
+| S1 Happy path | Simulated WebSocket: identity yes; resolved; technician on time; rating 5; NPS 9; no extra feedback | Persist validated fields and terminal completion | Call `716fed3a-bd34-409f-a767-b165ca6f3835`: all expected answers persisted, no unclear fields, terminal completed | PASS — automated simulated caller |
+| S2 Not resolved + follow-up | Simulated WebSocket: identity yes; issue no; “My internet keeps dropping”; rating/NPS | Persist issue description and `needs_followup=true` | Call `337f8c5c-9a5a-4442-a8de-6faa5b978242`: exact issue phrase saved, follow-up true, terminal hangup | PASS — automated simulated caller |
+| S3 Barge-in | Simulated WebSocket sends answer during agent playback | Receive `clear`, process caller response, continue and save result | Call `8edab79e-1bf9-4c5a-a3fb-3c3dec50853a`: clear observed, answers persisted, terminal completed | PASS — automated simulated caller |
+| S4 Silence | Live WebSocket with no caller media | One reminder then no-response terminal | Call `fd617506-669f-407e-bed8-ed5ed042a4af`: one reminder, `outcome=no_response`, terminal no-input event | PASS — automated WebSocket check |
+| S5 Call me later | Browser call export / persisted API result `b5a2931a-8699-47bc-9743-137d38f9fd6a`: identity yes, then “call me later” | Persist callback request, end call, keep unanswered feedback empty; no opt-out | Export and local SQLite agree: `callback_requested`, `needs_followup=true`, `do_not_call=false`, `callback_time=null`, identity true, remaining answers null, `unclear_fields=[]`; agent acknowledged callback and closed. This phrase gives no concrete date/time, so null callback_time is expected. | PASS — completed browser call record; audio and live browser diagnostics not retained |
+| S6 Wrong person | Simulated WebSocket says not account holder | Stop before feedback and persist wrong-person outcome | Call `2022e0cd`: wrong_person, identity false, no feedback, terminal event received | PASS — automated simulated caller; short ID retained in historical log |
+| S7 Unclear rating then valid answer | Manual browser call `6885db9d-219d-4fa8-8b7d-ffc287233301`: “and not sure”, then “I would rate 4 out of 5” | Keep rating pending after unclear input; persist only valid score and continue | Transcript shows rating clarification, then caller's 4/5. SQLite result has `technician_rating=4`, NPS 9, `outcome=completed`, `unclear_fields=[]`; proceeds through additional feedback and closes. | PASS — manual browser call; not automated caller |
+| S8 Off-topic mid-call | Manual browser call `d8a93d14-4f7e-43f4-9e57-93f953e31138`: “What is the weather today?” twice during issue-resolution question | Politely redirect to broadband feedback without answering/inventing weather; keep issue question pending | First turn repeats the resolution question in alternate wording; second uses generic invalid-answer prompt. Caller then says “fully resolved” and conversation proceeds. SQLite saves issue yes, rating 5, NPS 9, completed, no unclear fields; unrelated content is not saved. | PARTIAL PASS — manual browser call; redirect/acknowledgment criterion failed |
+
+All eight required scenarios now have call or test evidence. Seven met their stated scenario outcome; S8 is a documented partial pass because the call resumed safely but failed to acknowledge and redirect the unrelated question. Four full-call scenarios (happy, unresolved, barge-in, wrong-person) ran automatically through the simulated caller; callback, unclear-rating recovery, and off-topic were manual browser calls. The separate silence call used the live WebSocket with no caller audio. The callback run S5 verifies that “call me later” did not become feedback. Its initial empty-transcript/clarification behavior and callback LLM delay are analyzed below; the source audio and contemporaneous application logs were not retained.
+
+### Callback call follow-up — `b5a2931a-8699-47bc-9743-137d38f9fd6a`
+
+The supplied browser-call transcript/export matches the local SQLite call, transcript, and turn-metric records. `Yes` confirmed identity; “call me later” ended the call as `callback_requested`. `needs_followup=true`, `do_not_call=false`, and all unanswered fields stayed null with no unclear fields. `callback_time=null` is consistent with a relative request that did not specify a date/time; the record confirms a callback request but does not demonstrate an actual outbound callback being scheduled or placed.
+
+The callback turn reported STT **635.6 ms**, LLM **5914.3 ms**, TTS first audio **4095.4 ms**, and total response **10816.1 ms**. `llm_ms` is written from `extract_turn_candidates()` elapsed wall time: deterministic parsing, any Ollama request, and extraction merge; it is not an Ollama-only inference timer. For this turn, the expected field was `issue_resolved`, while “call me later” has no deterministic answer for that field. In the inspected code, this sends the phrase into the Ollama extraction fallback before `ConversationService.handle_turn()` recognizes callback intent and returns a terminal callback action. Therefore the extra LLM work is a **confirmed unnecessary fallback in the current code path** and likely explains the observed 5.9 s. The call export does not retain the fallback log or Ollama server timings, so whether the historical request itself reached/inferred on Ollama is not proven; no queue metric is present. Since the reply action is terminal `callback`, optional LLM reply generation is not used for that response.
+
+The minimum safe fix is to detect callback intent before extraction (using the existing callback recognizer), skip LLM extraction for that utterance, and still pass the original caller text to `handle_turn()` so the existing state transition, callback-time parsing, follow-up flag, and closing remain authoritative. Focused regression tests should assert: (1) “call me later” while `issue_resolved` is expected does not call a mocked extractor and still returns `callback_requested`; (2) `callback_time` remains null for the unspecific phrase and the phrase is not stored as `other_feedback`; (3) “call me tomorrow morning” preserves its parsed callback time; and (4) callback remains distinct from opt-out. No source change was made in this diagnosis pass, to preserve the working callback behavior.
+
+The two initial “couldn't make that out” prompts are not accompanied by caller transcript rows. In the inspected WebSocket path, this exact prompt is sent when faster-whisper returns an empty transcript; that path writes an `empty_transcription` acknowledgement and continues without saving a caller transcript or entering answer extraction. This confirms the prompt's code path **if the saved bot text came from this version**, but does not identify why the transcript was empty (microphone capture, transport, VAD buffering, silence/preprocessing, or STT). The inspected workspace has only an old `import_debug.log` from 2026-10-21, not call-time logs for this call; no caller audio was retained. Thus this is not evidence of an STT model error or a verified microphone defect. A focused future test can stub STT to return empty twice, assert the two clarification events, no caller transcript rows/LLM extraction calls, and then confirm the subsequent “Yes” advances identity. Real diagnosis requires per-call `empty_transcription`/media counters and a retained consented test recording or verified live browser diagnostics.
 
 The script supports `happy`, `unresolved`, `barge-in`, and `wrong-person`. It uses Edge TTS caller speech, sends paced 20 ms μ-law frames to the real WebSocket, correlates marks to bot transcript sequence, and reads the persisted result. The latest unresolved scenario passes after the barge-in gap fix; earlier failing runs remain recorded as historical failures.
 
 ## End-of-turn threshold comparison
 
-**Offline turn-detector replay completed; live API comparison not run.** `scripts/evaluate_audio_measurements.py` replayed the same ten Edge TTS telephone utterances through `EnergyVAD`/`TurnDetector`. Each utterance produced one detected turn at both 500 ms and 1000 ms (10/10 each; no split in this small sample). This is not evidence of live call latency or caller cut-off rates; the production default remains 800 ms.
+**Partial; caller cutoff and latency comparison not measured.** Existing offline replay used the same ten generated Edge TTS phrases for 500 and 1000 ms detector settings in one run; each produced one detected turn (10/10 at each). Operational cutoff definition: detector signals end-of-turn before the last spoken phoneme in the known source utterance. The checked-in evaluation artifact retains transcripts but not the source WAV or phoneme/utterance-end annotations. Therefore cutoff count/rate, missed/delayed detection, median/p90 response latency, and incremental end-to-end delay cannot be measured from the retained artifacts. The configured threshold difference is 500 ms by design, but that is not a measured response-latency delta. No caller cutoffs can be inferred from “one turn” counts. Production remains `END_OF_TURN_SILENCE_MS=800`; 500 versus 1000 preference is provisional/unresolved. Next test: retain the exact same ten speech WAVs plus manually/algorithmically verified final-phoneme times, replay both settings through the same live detector, log turn-end times and response latency, and review every event for premature cutoff.
 
 ## 8 kHz versus 16 kHz STT
 
-**Completed on 10 Edge TTS reference utterances.** For each phrase, FFmpeg decoded the same source to mono 16 kHz PCM. The 8 kHz arm polyphase-resampled to 8 kHz, G.711 μ-law encoded, then used `STTService.transcribe_ulaw` (μ-law decode and 8→16 kHz resampling); the 16 kHz arm sent the original 16 kHz PCM directly to the same cached `faster-whisper tiny` CPU/int8 model. With case/punctuation normalization and numeric words/digits normalized, mean WER was **0.0% at both rates** (10/10 exact normalized transcripts). Full references/transcripts are in [data/stt_comparison.csv](data/stt_comparison.csv). This isolated test is separate from the synthesized live unresolved conversation recorded earlier; that scenario was not rerun after the current VAD change. No incorrect physical-microphone transcript was captured in this pass, so a live STT root cause is not established.
+**Existing synthetic paired result retained; answer impact newly checked offline.** The same ten Edge TTS utterance references/transcripts and reported normalized WER (0.0% at both rates) are in [data/stt_comparison.csv](data/stt_comparison.csv). Original generated WAVs were not retained, so the audio generation/inference experiment itself cannot now be reproduced bit-for-bit. Encoding path documented by the original run: source synthesized once to mono 16 kHz PCM; 8 kHz arm polyphase resample → μ-law encode → app μ-law decode/resample/STT; 16 kHz arm direct PCM to the same tiny CPU/int8 model. The recorded transcripts were passed through the current deterministic question-aware parser using [scripts/evaluate_stt_answer_impact.py](scripts/evaluate_stt_answer_impact.py); output is [data/stt_comparison_answer_impact.csv](data/stt_comparison_answer_impact.csv). There were 0 of 10 paired extracted-answer disagreements. This is parser-level projected answer impact; no calls were inserted into the database for this comparison, so persisted-answer effects were not measured. Two transcript pairs did not yield a direct field value: “Please call me tomorrow morning” is callback intent handled separately from feedback, and is unresolved under the `other_feedback` parser; no other-feedback value was invented. This synthetic corpus does not establish real-caller WER or prove zero impact in noisy audio.
 
 ## Paid API cost scenario
 
-No paid API is required by this implementation. No current prices were verified, so the following is only a formula, not a quote:
+This is a hypothetical, not an actual bill; the local-first implementation remains unchanged. Pricing checked 2026-10-23 on official OpenAI pages: [GPT-4o mini transcribe](https://developers.openai.com/api/docs/pricing) $0.003/audio minute; [GPT-6 Luna](https://developers.openai.com/api/docs/pricing) $0.05/M input and $0.25/M output tokens (standard short-context tier); [TTS-1](https://developers.openai.com/api/docs/models/tts-1) $15/M characters. TTS-1 is deprecated and official docs say it shuts down Jan 6, 2027; this rate is a transparent current-price proxy, not a production recommendation. A replacement TTS service must be priced before launch.
 
-- 5,000 calls/day × 2.5 minutes = 12,500 call-minutes/day.
-- Monthly cost = `12,500 × 30 × (verified STT price per minute)` + `5,000 × 30 × (verified LLM tokens/call × price/token + TTS characters/call × price/character)` + hosting and telephony.
-- Provider, region, token/character volume, taxes, retries, and telephony rates are unspecified. No dollar estimate is asserted.
+Assumptions for 5,000 calls/day × 30 days = 150,000 calls/month: scenario calls last 2.5 min, but only the stated caller-speech minutes are billable to STT (silence and bot playback excluded); total call length is not multiplied directly by STT rate. LLM tokens are cumulative across all turns for one call. TTS character count includes generated agent speech. Low/base/high are planning assumptions, not observed usage.
+
+| Scenario | STT min/call | LLM input/output tokens per call | TTS chars/call | STT $/call | LLM input $/call | LLM output $/call | TTS $/call | Total $/call | 30-day total |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Low | 0.75 | 1,000 / 300 | 500 | 0.00225 | 0.00005 | 0.000075 | 0.00750 | **0.009875** | **$1,481.25** |
+| Base | 1.25 | 3,000 / 700 | 900 | 0.00375 | 0.00015 | 0.000175 | 0.01350 | **0.017575** | **$2,636.25** |
+| High | 2.50 | 6,000 / 1,500 | 1,500 | 0.00750 | 0.00030 | 0.000375 | 0.02250 | **0.030675** | **$4,601.25** |
+
+Formulas: STT = billable input minutes × $0.003; LLM input/output = tokens × $0.05/$0.25 ÷ 1,000,000; TTS = generated characters × $15 ÷ 1,000,000; month = per-call sum × 150,000. For example base STT bills 1.25 caller-audio minutes, not the full 2.5-minute wall-clock call. Excludes taxes, discounts, retries, infrastructure, hosting, phone numbers, carrier/telephony minutes, idle capacity, recording/storage, and any provider minimums. TTS deprecation means the estimate needs refresh against the chosen replacement service before any real deployment.
 
 ## Three concrete failure examples
 
-1. **Terminal event race — fixed.** The original handler sent `hangup` and closed immediately after the final TTS mark, without waiting for the browser's playback acknowledgement. The simulator's reader paused to send that acknowledgement; the remote close could interrupt the reader before it consumed `hangup`. The server also labeled its mark acknowledgement as `event:"mark"`, which clients could interpret as another playback mark. Marks now have unique names, the server does not echo them as playback marks, and terminal playback drains matching acknowledgements before sending `hangup` and closing. Directly awaiting the playback task in the receiver caused a reproduced self-deadlock; the receiver-pump helper fixes that. Focused terminal tests passed 10 consecutive runs; live happy, wrong-person, and barge-in clients received the terminal event.
-2. **Slow routine turns — mitigated.** Pre-optimization barge-in response median/p90 were 8134/8775 ms because straightforward answers incurred local LLM wording. Clear, validated answers now use the state-machine question; ambiguous wording still goes through the LLM. Reply timeout is capped at 6 seconds. The new live barge-in median/p90 are 1727/2165 ms; the 1.5 s target remains unmet.
-3. **Ongoing issue phrase dropped during playback — fixed for the reproduced path.** The exact Edge TTS phrase was 2.64 s; direct STT recognized it. At the configured VAD threshold it formed speech runs of 10, 7, 12, 6, 9, and 11 frames, with intervening low-energy gaps; no voiced run exceeded 240 ms. During bot playback the old barge-in counter reset on every single quiet 20 ms frame and discarded all candidate frames until 280 ms of uninterrupted speech, so the phrase could not interrupt playback or enter the utterance buffer. The gate now accumulates speech across gaps up to 160 ms, retains the onset plus short gaps, and still requires 280 ms total speech before `clear`. The real unresolved simulated-caller call now passes and saves `still_facing="My internet keeps dropping."`. Browser microphone reproduction remains NOT RUN.
+1. **Terminal event race — fixed.** Reproducible terminal regressions and simulated client calls showed the receiver could await playback whose mark acknowledgement it alone could receive; cancellation/close ordering could interrupt hangup delivery. The receiver-pump helper keeps receiving and acknowledges the mark before finalization, and terminal event is sent before close. Focused terminal tests were repeated ten times; simulated happy/wrong-person/barge-in clients received the terminal event. User impact: missing call-end event or incomplete persistence risk; browser protocol remains manually unverified.
+2. **Audio-quality defect: μ-law silence encoded as `0x00` — fixed.** Code inspection plus codec regression showed browser transmit-queue underrun and final-frame padding used 160 bytes of `0x00`, which decodes to near-full-scale PCM, while μ-law silence is `0xFF`. This could inject loud bursts and false VAD triggers. Both silence fillers now use `0xFF`; automated codec tests verify zero decoded PCM. User impact: audible clicks/noise and false turn activity. Physical microphone/playback verification remains required.
+3. **Ongoing-issue phrase dropped during playback — fixed for reproduced path.** The exact 2.64 s synthetic phrase was directly recognized by STT but voiced runs were all shorter than the former 280 ms uninterrupted barge-in threshold; quiet inter-word frames reset the counter, so it was discarded during playback. Gate now accumulates speech across gaps up to 160 ms and retains onset frames. The real simulated unresolved call persisted the exact `still_facing` answer. This supports the reproduced synthetic path, not physical-browser acoustic performance.
 
 ## Reproduction and limitations
 
@@ -101,7 +108,7 @@ No paid API is required by this implementation. No current prices were verified,
 4. `python scripts/diagnose_providers.py` checks the local STT model, Ollama, and live Edge TTS reachability.
 5. Run `python scripts/simulated_caller.py --scenario happy`, `unresolved`, and `barge-in`. Latest results: all three passed; unresolved persisted the exact ongoing-problem description.
 
-Live browser microphone and browser recording were not completed. The live 500/1000 ms comparison remains outstanding; the 8/16 kHz ten-utterance reference comparison is complete. Ongoing issue capture remains an implementation blocker.
+Live browser microphone and browser recording were not completed. The live 500/1000 ms comparison remains outstanding; the 8/16 kHz ten-utterance synthetic reference comparison is complete. The reproduced unresolved-issue simulated call now passes and persists `still_facing`; physical microphone behavior remains unverified.
 
 ## Microphone and TTS integration follow-up (2026-10-22)
 
